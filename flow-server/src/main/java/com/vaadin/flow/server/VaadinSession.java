@@ -1092,13 +1092,19 @@ public class VaadinSession implements HttpSessionBindingListener, Serializable {
             }
         }
 
-        stream.defaultWriteObject();
-        if (serializeUIs) {
-            stream.writeObject(uIs);
-            stream.writeObject(resourceRegistry);
-        } else {
-            stream.writeObject(new HashMap<>());
-            stream.writeObject(new StreamResourceRegistry(this));
+        Map<Class<?>, CurrentInstance> old = CurrentInstance.setCurrent(this);
+        try {
+            CurrentInstance.setCurrent(this);
+            stream.defaultWriteObject();
+            if (serializeUIs) {
+                stream.writeObject(uIs);
+                stream.writeObject(resourceRegistry);
+            } else {
+                stream.writeObject(new HashMap<>());
+                stream.writeObject(new StreamResourceRegistry(this));
+            }
+        } finally {
+            CurrentInstance.restoreInstances(old);
         }
     }
 

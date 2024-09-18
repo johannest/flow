@@ -15,10 +15,12 @@
  */
 package com.vaadin.flow.component;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
@@ -32,6 +34,7 @@ import com.vaadin.flow.dom.PropertyChangeListener;
 import com.vaadin.flow.dom.ShadowRoot;
 import com.vaadin.flow.i18n.I18NProvider;
 import com.vaadin.flow.internal.AnnotationReader;
+import com.vaadin.flow.internal.CurrentInstance;
 import com.vaadin.flow.internal.LocaleUtil;
 import com.vaadin.flow.internal.nodefeature.ElementData;
 import com.vaadin.flow.server.Attributes;
@@ -818,6 +821,20 @@ public abstract class Component
      */
     public void removeFromParent() {
         getElement().removeFromParent();
+    }
+
+    private void writeObject(java.io.ObjectOutputStream stream)
+            throws IOException {
+        if (this instanceof UI ui) {
+            Map<Class<?>, CurrentInstance> old = CurrentInstance.setCurrent(ui);
+            try {
+                stream.defaultWriteObject();
+            } finally {
+                CurrentInstance.restoreInstances(old);
+            }
+        } else {
+            stream.defaultWriteObject();
+        }
     }
 
 }
